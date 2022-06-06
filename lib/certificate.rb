@@ -1,5 +1,13 @@
 # frozen_string_literal: true
 
+# Generates a certificate for a given domain. Handles all the business with
+# Let's Encrypt, including handling the http challenge and updates our nginx
+# config to serve the new domain.
+# If a domain has already been setup and it's called again it will renew the
+# certificate (but only if it's about to expire). So, this could for instance
+# be safely called once per day on each certificate to handle automated renewals
+#
+# It doesn't know anything about cuttlefish more broadly
 class Certificate
   ROOT_DIRECTORY = "/etc/cuttlefish-ssl"
   ACME_SERVER_KEY_FILENAME = File.join(ROOT_DIRECTORY, "keys", "key.pem")
@@ -19,7 +27,7 @@ class Certificate
 
     client = Acme::Client.new(
       private_key: acme_server_key,
-      directory: LETSENCRYPT_STAGING
+      directory: LETSENCRYPT_PRODUCTION
     )
 
     # Create an account. If we already have an account connected to that private key
@@ -37,7 +45,8 @@ class Certificate
     # Store the challenge in the database so that the web application
     # can respond correctly. We also need to handle the situation where we already have the
     # token in the database
-    AcmeChallenge.find_or_create_by!(token: challenge.token).update!(content: challenge.file_content)
+    record = AcmeChallenge.find_or_create_by!(token: challenge.token)
+    record.update!(content: challenge.file_content)
 
     # Now actually ask let's encrypt to the validation
     challenge.request_validation
@@ -47,10 +56,10 @@ class Certificate
       sleep(2)
       challenge.reload
     end
-    raise "Challenge failed: #{challenge.status}" unless challenge.status == "valid"
+    # Clean up the challenge in the database
+    record.destroy
 
-    # Clean up the challenge
-    AcmeChallenge.find_by!(token: challenge.token).destroy
+    raise "Challenge failed: #{challenge.status}" unless challenge.status == "valid"
 
     # Now we generate the private key for the certificate and store it away
     # in a place where nginx will ultimately access it
@@ -75,7 +84,25 @@ class Certificate
 
     # Now create the nginx configuration for that domain
     create_directory_and_write(nginx_filename, nginx_config)
-    # TODO: Check that nginx config is all good and reload nginx
+
+    # If everything worked then just return
+    return if reload_nginx
+
+    # If reloading fails for some reason clear away the nginx config, the cert and private key
+    # so that there isn't a partially succesful run lying around which could cause confusion
+    FileUtils.rm_f([cert_private_key_filename, cert_filename, nginx_filename])
+    raise "Couldn't reload nginx for some reason"
+  end
+
+  # Returns true if successful
+  def reload_nginx
+    # In our case the deploy user is allowed to do this particular command without
+    # having to enter a password
+    # TODO: It's possible for there to be a race condition here between two seperate processed doing the reloading
+    result = system("sudo service nginx configtest")
+    return result unless result
+
+    system("sudo service nginx reload")
   end
 
   def new_cert_required?
