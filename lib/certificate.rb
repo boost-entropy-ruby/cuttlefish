@@ -22,6 +22,19 @@ class Certificate
     @domain = domain
   end
 
+  # Returns the domains for all certificates that are currently on disk
+  def self.all_domains
+    domains_live = Dir[File.join(live_directory, "*")].map { |f| File.basename(f) }
+    domains_nginx = Dir[File.join(nginx_directory, "*")].map { |f| File.basename(f) }
+    (domains_live + domains_nginx).uniq
+  end
+
+  # Remove certificate, private key and nginx config for this domain. Also reload nginx config
+  def remove
+    FileUtils.rm_rf([live_directory_domain, nginx_filename])
+    reload_nginx
+  end
+
   def generate
     return unless new_cert_required?
 
@@ -115,20 +128,32 @@ class Certificate
     days_to_expiry < DAYS_TO_EXPIRY_CUTOFF
   end
 
+  def self.live_directory
+    File.join(ROOT_DIRECTORY, "live")
+  end
+
+  def live_directory_domain
+    File.join(Certificate.live_directory, domain)
+  end
+
+  def self.nginx_directory
+    File.join(ROOT_DIRECTORY, "nginx-sites")
+  end
+
   # We'll put everything under /etc/cuttlefish-ssl in a naming convention
   # that is similar to what let's encrypt uses
   def cert_private_key_filename
-    File.join(ROOT_DIRECTORY, "live", domain, "privkey.pem")
+    File.join(live_directory_domain, "privkey.pem")
   end
 
   # We'll put everything under /etc/cuttlefish-ssl in a naming convention
   # that is similar to what let's encrypt uses
   def cert_filename
-    File.join(ROOT_DIRECTORY, "live", domain, "fullchain.pem")
+    File.join(live_directory_domain, "fullchain.pem")
   end
 
   def nginx_filename
-    File.join(ROOT_DIRECTORY, "nginx-sites", domain)
+    File.join(Certificate.nginx_directory, domain)
   end
 
   # TODO: Improve SSL setup - check with ssllabs.com
