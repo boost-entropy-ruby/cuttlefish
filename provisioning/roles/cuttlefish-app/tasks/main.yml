@@ -45,13 +45,13 @@
   apt:
     pkg: git
 
-- name: Add postgresql apt repository
-  apt_repository:
-    repo: deb http://apt.postgresql.org/pub/repos/apt xenial-pgdg main
-
 - name: Add postgresql apt signing key
   apt_key:
     url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+
+- name: Add postgresql apt repository
+  apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt bionic-pgdg main
 
 - name: Install postgresql 13
   apt:
@@ -263,5 +263,5 @@
     name: daily old email archiving
     job:  "cd /srv/www/current && /usr/local/lib/rvm/bin/rvm . do bundle exec rake cuttlefish:daily_tasks RAILS_ENV=production"
     user: deploy
-    minute: 0
-    hour: 12
+    minute: "0"
+    hour: "12"
