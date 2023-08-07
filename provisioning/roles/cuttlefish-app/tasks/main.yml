@@ -4,6 +4,12 @@
     name: apache2
     state: absent
 
+- name: Install nginx
+  apt:
+    pkg:
+      - nginx
+    state: present
+
 - name: Add key for passenger
   apt_key:
     url: http://keyserver.ubuntu.com/pks/lookup?op=get&fingerprint=on&search=0xAC40B2F7
@@ -20,11 +26,10 @@
     state: present
     update_cache: yes
 
-- name: Install nginx
+- name: Install passenger
   apt:
     pkg:
-      - nginx-extras
-      - passenger
+      - libnginx-mod-http-passenger
     state: present
 
 - name: Ensure that deploy owns /srv/www
@@ -51,7 +56,7 @@
 
 - name: Add postgresql apt repository
   apt_repository:
-    repo: deb http://apt.postgresql.org/pub/repos/apt bionic-pgdg main
+    repo: deb http://apt.postgresql.org/pub/repos/apt focal-pgdg main
 
 - name: Install postgresql 13
   apt:
@@ -81,10 +86,10 @@
     name: postgresql@13-main
 
 # Installing via bash so that rvm is used. Otherwise would install gems for default system ruby
-- name: Install bundler gem < 2.0
-  command: bash -lc "gem install bundler --version '<2.0'"
+- name: Install bundler gem
+  command: bash -lc "gem install bundler --version 2.3.26"
   args:
-    creates: "/usr/local/lib/rvm/gems/ruby-2.5.1/gems/bundler-*"
+    creates: "/usr/local/lib/rvm/gems/ruby-2.7.8/gems/bundler-2.3.26"
 
 - name: Install package dependencies that allow gem native extensions to be built
   apt:
@@ -134,7 +139,7 @@
 
 - name: Install python module requirement for ansible creating postgresql db
   apt:
-    pkg: python-psycopg2
+    pkg: python3-psycopg2
 
 - name: Create cuttlefish postgresql database
   postgresql_db:
@@ -215,11 +220,7 @@
     groups: adm
     append: yes
 
-- name: Add certbot PPA
-  apt_repository:
-    repo: 'ppa:certbot/certbot'
-
-- name: Install certbot using their PPA
+- name: Install certbot
   apt:
     pkg: certbot
     update_cache: yes
