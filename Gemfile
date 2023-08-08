@@ -18,9 +18,14 @@ group :assets do
   gem "bootstrap-sass", "~> 2.0"
 
   # See https://github.com/sstephenson/execjs#readme for more supported runtimes
+  # IMPORTANT NOTE - as a short term workaround we have installed nodejs on the cuttlefish server
+  # to be the js runtime. This is because we're still using capistrano 2 which is now not working
+  # well with the newer bundler version which means that it can't find therubyracer. Ugh
+  # TODO: Upgrade capistrano 2 -> 3
   gem "therubyracer", platforms: :ruby
 
-  gem "less-rails"
+  # Problem with compiling assets in production otherwise
+  gem "less-rails", "4.0.0"
   gem "uglifier"
 end
 
@@ -29,7 +34,9 @@ gem "jquery-rails"
 gem "jbuilder"
 
 gem "eventmachine"
-gem "sidekiq"
+# We're using a very old version of redis currently which forces us stay at version 5 of sidekiq
+# TODO: Update redis
+gem "sidekiq", "~> 5.1"
 gem "sinatra", require: nil
 
 gem "batch-loader"
@@ -48,12 +55,17 @@ gem "fog-aws"
 gem "font-awesome-rails"
 gem "friendly_id"
 gem "google-analytics-rails"
-gem "graphql"
-gem "graphql-client"
+# Looks like it's a bit of a pain to upgrade graphql. So just locking
+# the version for the time being
+gem "graphql", "~> 1.8.5"
+# And the same for graphql-client though I'm guessing that should be easier to upgrade than graphql
+gem "graphql-client", "~> 0.13.0"
 gem "graphql-errors"
 gem "graphql-guard"
 gem "gravatar_image_tag"
-gem "haml-rails"
+# haml-coderay seems to only work with version 1 of haml-rails.
+gem "haml-rails", "~> 1.0"
+gem "haml-coderay"
 gem "honeybadger"
 gem "syslog_protocol"
 gem "will_paginate"
@@ -61,7 +73,6 @@ gem "will_paginate"
 gem "formtastic-bootstrap",
     git: "https://github.com/mjbellantoni/formtastic-bootstrap.git",
     ref: "f86eaef93bea0a06879b3977d7554864964a623f"
-gem "haml-coderay"
 gem "minitar"
 gem "newrelic_rpm"
 gem "nokogiri"
@@ -96,7 +107,7 @@ gem "acme-client"
 
 group :development do
   gem "capistrano", "~> 2"
-  gem "faker", git: "https://github.com/stympy/faker.git", branch: "master"
+  gem "faker"
   gem "graphiql-rails"
   gem "rubocop", require: false
   gem "rubocop-rails", require: false
