@@ -5,7 +5,7 @@ source "https://rubygems.org"
 gem "dotenv-rails"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem "rails", "5.2.4.4"
+gem "rails", "~> 6.0.0"
 
 gem "pg"
 
@@ -65,8 +65,8 @@ gem "graphql-client", "~> 0.16.0"
 gem "graphql-guard"
 gem "gravatar_image_tag"
 # haml-coderay seems to only work with version 1 of haml-rails.
-gem "haml-rails", "~> 1.0"
 gem "haml-coderay"
+gem "haml-rails", "~> 1.0"
 gem "honeybadger"
 gem "syslog_protocol"
 gem "will_paginate"
@@ -111,6 +111,7 @@ group :development do
   gem "faker"
   gem "graphiql-rails"
   gem "rubocop", require: false
+  gem "rubocop-graphql", require: false
   gem "rubocop-rails", require: false
   gem "rubocop-rspec", require: false
   gem "rvm-capistrano", ">= 1.5.6", require: false

@@ -1,5 +1,3 @@
-# frozen_string_literal: true
-
 Rails.application.routes.draw do
   mount GraphiQL::Rails::Engine, at: "/graphiql", graphql_path: "/graphql" if Rails.env.development?
   post "/graphql", to: "graphql#execute"
@@ -37,11 +35,9 @@ Rails.application.routes.draw do
 
   class SiteAdminConstraint
     def matches?(request)
-      begin
-        JWT.decode(request.session[:jwt_token], ENV["JWT_SECRET"], true, { algorithm: "HS512" }).first["site_admin"]
-      rescue JWT::DecodeError
-        false
-      end
+      JWT.decode(request.session[:jwt_token], ENV["JWT_SECRET"], true, { algorithm: "HS512" }).first["site_admin"]
+    rescue JWT::DecodeError
+      false
     end
   end
 

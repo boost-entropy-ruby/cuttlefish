@@ -114,9 +114,21 @@ class Archiving
       # don't want the callbacks to get called
       email.update_column(:data_hash, data[:data_hash])
     end
+    # When archiving the addresses are not deleted so we assume that the address is already
+    # there when unarchiving.
+    # However, we're going to be slightly more clever and check that the text value of the address
+    # is correct and if it doesn't exist in the database at all we're going to recreate it
+    address = Address.find_by(id: data[:to_address][:id])
+    if address
+      unless address.text == data[:to_address][:text]
+        raise "Data for address with id #{address.id} does not match that in archive"
+      end
+    else
+      address = Address.create!(id: data[:to_address][:id], text: data[:to_address][:text])
+    end
     delivery = Delivery.create!(
       id: data[:id],
-      address_id: data[:to_address][:id],
+      address: address,
       sent: data[:sent],
       status: data[:status],
       created_at: data[:created_at],
@@ -129,7 +141,16 @@ class Archiving
       delivery.open_events.create(open_event_data)
     end
     data[:tracking][:links].each do |link_data|
-      delivery_link = delivery.delivery_links.create!(link_id: link_data[:id])
+      # Archiving doesn't destroy links so we could naively just assume they will be there when we unarchive.
+      # However we're going to try to be slightly more clever and make sure that the right link data is set
+      # and if it isn't in the database for some reason then we will recreate it
+      link = Link.find_by(id: link_data[:id])
+      if link
+        raise "Data for link with id #{link.id} does not match that in archive" unless link.url == link_data[:url]
+      else
+        link = Link.create!(id: link_data[:id], url: link_data[:url])
+      end
+      delivery_link = delivery.delivery_links.create!(link: link)
       link_data[:click_events].each do |click_event_data|
         delivery_link.click_events.create(click_event_data)
       end
@@ -144,7 +165,7 @@ class Archiving
   end
 
   def copy_to_s3(date, noisy: true)
-    if (s3_bucket = ENV["S3_BUCKET"])
+    if (s3_bucket = ENV.fetch("S3_BUCKET", nil))
       logger.info "Copying #{archive_filename_for(date)} to S3 bucket #{s3_bucket}..." if noisy
 
       s3_connection = Fog::Storage.new(fog_storage_details)
@@ -173,8 +194,8 @@ class Archiving
   def fog_storage_details
     details = {
       provider: "AWS",
-      aws_access_key_id: ENV["AWS_ACCESS_KEY_ID"],
-      aws_secret_access_key: ENV["AWS_SECRET_ACCESS_KEY"]
+      aws_access_key_id: ENV.fetch("AWS_ACCESS_KEY_ID", nil),
+      aws_secret_access_key: ENV.fetch("AWS_SECRET_ACCESS_KEY", nil)
     }
 
     details[:region] = ENV["AWS_REGION"] if ENV["AWS_REGION"]

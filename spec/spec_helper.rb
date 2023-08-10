@@ -7,7 +7,7 @@ module SignInTestHelpers
   # This can be accessed from any rspec controller test
   def sign_in(admin)
     # We're not putting an expiry on this JSON web token, though we could
-    session[:jwt_token] = JWT.encode({ admin_id: admin.id }, ENV["JWT_SECRET"], "HS512")
+    session[:jwt_token] = JWT.encode({ admin_id: admin.id }, ENV.fetch("JWT_SECRET", nil), "HS512")
   end
 end
 
@@ -57,7 +57,7 @@ RSpec.configure do |config|
   # config.mock_with :rr
 
   # Remove this line if you're not using ActiveRecord or ActiveRecord fixtures
-  config.fixture_path = "#{::Rails.root}/spec/fixtures"
+  config.fixture_path = Rails.root.join("spec/fixtures")
 
   # If you're not using ActiveRecord, or you'd prefer not to run each of your
   # examples within a transaction, remove the following line or assign false

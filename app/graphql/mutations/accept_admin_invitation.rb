@@ -6,8 +6,8 @@ module Mutations
     argument :password, String, required: true
     argument :token, String, required: true
 
-    field :token, String, null: true
     field :errors, [Types::UserError], null: false
+    field :token, String, null: true
 
     def resolve(name:, password:, token:)
       Pundit.authorize(context[:current_admin], :invitation, :update?)
@@ -17,7 +17,7 @@ module Mutations
         password: password
       )
       if admin.errors.empty?
-        token = JWT.encode({ admin_id: admin.id, exp: Time.now.to_i + 3600 }, ENV["JWT_SECRET"], "HS512")
+        token = JWT.encode({ admin_id: admin.id, exp: Time.now.to_i + 3600 }, ENV.fetch("JWT_SECRET", nil), "HS512")
         { token: token, errors: [] }
       else
         { token: nil, errors: user_errors_from_form_errors(admin.errors, ["attributes"]) }
