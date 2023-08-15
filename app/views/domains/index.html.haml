@@ -1,0 +1,24 @@
+- content_for :title, "Problem Domains"
+
+.page-header
+  %h1= yield :title
+  %p
+    Domains that have a high (or higher than usual) bounce rate might be blocking email.
+
+  %p
+    Here we show the domains that have hard bounced in the last 7 days
+
+%table.table
+  %thead
+    %tr
+      %th Domain
+      %th Number of hard bounces
+      %th Number of deliveries
+      %th Bounce rate
+  %tbody
+    - @domains.each do |d|
+      %tr
+        %td= d[:domain]
+        %td= d[:hard_bounces]
+        %td= d[:deliveries]
+        %td= "%0.0f%%" % (100.0 * d[:bounce_rate])

@@ -90,7 +90,7 @@ class Archiving
 
   def serialise(delivery)
     ActionController::Base.new.render_to_string(
-      partial: "deliveries/delivery.json.jbuilder",
+      partial: "deliveries/delivery",
       locals: { delivery: delivery }
     )
   end
@@ -161,6 +161,8 @@ class Archiving
     (data[:meta_values] || {}).each do |key, value|
       delivery.email.meta_values.create(key: key, value: value)
     end
+    # Terrible hacky workaround for so that the status doesn't get updated by creating other objects
+    delivery.update_columns(status: data[:status])
     delivery
   end
 

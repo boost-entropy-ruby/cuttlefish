@@ -127,12 +127,15 @@ dependencies:
       license_key: "{{ new_relic_license_key }}"
   - role: rvm.ruby
     # The last ruby listed will be set as the default ruby
-    rvm1_rubies: ['ruby-2.7.8']
+    rvm1_rubies: ['ruby-3.0.6']
     rvm1_rvm_check_for_updates: false
     rvm1_install_path: '/usr/local/lib/rvm'
     rvm1_user: 'root'
     # Because we're installing the expected bundler in a seperate step
     rvm1_bundler_install: False
+    # Need this for installing ruby 3.0 on ubuntu 20.04. See https://github.com/rvm/rvm/issues/4975
+    # Hopefully we can get rid of this once we've upgrade to ubuntu 22.04.
+    rvm1_install_flags: "--disable-binary"
   - role: DavidWittman.redis
     redis_bind: "127.0.0.1"
   - role: cuttlefish-backup

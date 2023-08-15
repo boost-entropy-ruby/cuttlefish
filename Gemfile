@@ -5,7 +5,7 @@ source "https://rubygems.org"
 gem "dotenv-rails"
 
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem "rails", "~> 6.0.0"
+gem "rails", "~> 6.1.0"
 
 gem "pg"
 
@@ -41,6 +41,7 @@ gem "sidekiq", "~> 5.1"
 gem "sinatra", require: nil
 
 gem "batch-loader"
+gem "coderay"
 gem "devise"
 gem "devise_invitable"
 gem "dkim"
@@ -63,10 +64,7 @@ gem "graphql", "~> 1.12.0"
 # And the same for graphql-client though I'm guessing that should be easier to upgrade than graphql
 gem "graphql-client", "~> 0.16.0"
 gem "graphql-guard"
-gem "gravatar_image_tag"
-# haml-coderay seems to only work with version 1 of haml-rails.
-gem "haml-coderay"
-gem "haml-rails", "~> 1.0"
+gem "haml-rails"
 gem "honeybadger"
 gem "syslog_protocol"
 gem "will_paginate"
